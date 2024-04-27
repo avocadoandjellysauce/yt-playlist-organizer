@@ -11,6 +11,7 @@ def main():
 
     api_key = "AIzaSyDC3oxqRypaOGAA6AgzeOoYaNzYhhxV00c" # API key for Youtube Data API
 
+    '''
     #initializing tkinter GUI
     root = tk.Tk()
     root.title("YouTube Playlist Organizer")
@@ -25,13 +26,14 @@ def main():
     
 
     root.mainloop()
-
+    '''
     # playlist id is the string after list= in a URL: https://www.youtube.com/playlist?list=PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl
-    #playlist_id = "PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl"  demo playlist TED-ED
+    playlist_id = "PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl"  #demo playlist TED-ED
 
     try:
-        #pl_title, pl_data = get_playlist_videos(api_key, playlist_id)
-        print(f'got playlist id: {playlist_id}')
+        pl_title, pl_data = get_playlist_videos(api_key, playlist_id)
+        #print(f'got playlist id: {playlist_id}')
+        print(pl_title, pl_data)
     except HttpError as e:
         print(f"An HTTP error {e.resp.status} occurred: {e.content}")
 
