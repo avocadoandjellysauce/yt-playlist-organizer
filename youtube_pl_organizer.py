@@ -14,6 +14,7 @@ from nltk.stem import WordNetLemmatizer
 nltk.download('stopwords')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('wordnet')
+nltk.download('punkt')
 lemmatizer = WordNetLemmatizer()
 import string
 
@@ -49,10 +50,10 @@ def main():
     #print(playlist_assignments)
 
     #Create subplaylists:
-    subplaylist_ids = create_subplaylists(youtube, subplaylist_info)
+    #subplaylist_ids = create_subplaylists(youtube, subplaylist_info)
 
     # add videos to subplaylists:
-    add_videos_to_subplaylists(youtube, playlist_assignments, url_dict, subplaylist_ids)
+    #add_videos_to_subplaylists(youtube, playlist_assignments, url_dict, subplaylist_ids)
 
 def assign_subplaylist(pl_data, subplaylist_info):
     subplaylist_assignments = {}
