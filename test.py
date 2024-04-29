@@ -4,37 +4,31 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 nltk.download('stopwords')
 nltk.download('punkt')
+import string
 
-video_description = '''Trace the 7,000 year old history of alcohol, from its first known origins in China to cultures all over the world fermenting their own drinks.
 
---
+description2 = '''Download a free audiobook and support TED-Ed's nonprofit mission: http://adbl.co/2om4O4Q
 
-Nobody knows exactly when humans began to create fermented beverages. The earliest known evidence comes from 7,000 BCE in China, where residue in clay pots has revealed that people were making an alcoholic beverage from fermented rice, millet, grapes, and honey. So how did alcohol come to fuel global trade and exploration? Rod Phillips explores the evolution of alcohol.
+Check out Neil Gaiman's "Norse Mythology": http://bit.ly/2opZptA
 
-Lesson by Rod Phillips, directed by Anton Bogaty.
+View full lesson: https://ed.ted.com/lessons/the-myth-o...
 
-Animator's website:  
+Thor – son of Odin, god of thunder, and protector of mankind – struggled mightily against his greatest challenge yet: opening a bag of food. How had the mighty god fallen so far? Scott Mellor tells the myth of Thor's journey to Utgard.
 
- / anton_bogaty  
-Sign up for our newsletter: http://bit.ly/TEDEdNewsletter
-Support us on Patreon: http://bit.ly/TEDEdPatreon
-Follow us on Facebook: http://bit.ly/TEDEdFacebook
-Find us on Twitter: http://bit.ly/TEDEdTwitter
-Peep us on Instagram: http://bit.ly/TEDEdInstagram
-View full lesson: https://ed.ted.com/lessons/a-brief-hi...
+Lesson by Scott A. Mellor, animation by Rune F.B. Hansen.
 
-Thank you so much to our patrons for your support! Without you this video would not be possible! Mauricio Basso, Athena Grace Franco, Tirath Singh Pandher, Melvin Williams, Tsz Hin Edmund Chan, Nicolas Silva, Raymond Lee, Kurt Almendras, Denise A Pitts, Abdallah Absi, Dee Wei, Richard A Berkley, Tim Armstrong, Daniel Nester, Hashem Al, denison martins fernandes, Doug Henry, Arlene Spiegelman, Michał Friedrich, Joshua Wasniewski, Maryam Dadkhah, Kristiyan Bonev, Keven Webb, Mihai Sandu, Deepak Iyer, Javid Gozalov, Emilia Alvarado, Jaime Arriola, Mirzat Tulafu, Lewis Westbury, Felipe Hoff, Rebecca Reineke, Cyrus Garay, Victoria Veretilo, Michael Aquilina, William Biersdorf, Patricia Alves Panagides, Valeria Sloan Vasquez, Mike Azarkman, Yvette Mocete, Pavel Maksimov, Victoria Soler-Roig, Betsy Feathers, Samuel Barbas, Therapist Gus, Sai Krishna Koyoda, Elizabeth Parker, William Bravante, Irindany Sandoval and Mark wisdom.'''
+Thank you so much to our patrons for your support! Without you this video would not be possible! Alejandro Cachoua, Thomas Mungavan, Elena Crescia, Edla Paniguel, Sarah Lundegaard, Charlsey, Anna-Pitschna Kunz, Tim Armstrong, Alessandro, Erika Blanquez, Ricki Daniel Marbun, zjweele13, Judith Benavides, Znosheni Kedy, Caitlin de Falco, Scheherazade Kelii, Errys, James Bruening, Michael Braun-Boghos, Ricardo Diaz, Kack-Kyun Kim, Alexandrina Danifeld, Danny Romard, Yujing Jiang, Stina Boberg, Mariana Ortega, Anthony Wiggins, Hoai Nam Tran, Joe Sims, David Petrovič, Chris Adriaensen, Lowell Fleming, Lorenzo Margiotta, Amir Ghandeharioon, Anuj Tomar, Sunny Patel, Rachel Birenbaum, Vijayalakshmi, Devesh Kumar, Uday Kishore, Aidan Forero, Leen Mshasha, Allan Hayes, Thomas Bahrman, Alexander Baltadzhiev, Vaibhav Mirjolkar, Tony, Michelle, Katie and Josh Pedretti, Erik Biemans, Gaurav Mathur, Sameer Halai, Hans Peng, Tekin Gültekin, Thien Loc Huynh, Bogdan Alexandru Stoica, Hector Quintanilla, PH Chua, Raheem, and Varinia Bohoslavsky.'''
 
-pattern = r"^(.*?)(?=http|shoutout|shout out|check out|sign up|newsletter|sponsor)"
-match = re.search(pattern, video_description, re.IGNORECASE | re.DOTALL)
+pattern = r"^(.*?)(?=http|shoutout|shout out|check out|sign up|newsletter|sponsor|patron|patrons)"
+match = re.search(pattern, description2, re.IGNORECASE | re.DOTALL)
 if match:
   # Extract the relevant description
-  video_description = match.group(1).strip()
+  description2 = match.group(1).strip()
 
 #print(video_description.replace('\n', ''))
 
 def language_processing(pl_data):
-    '''processes keywords from pl_data dictionary'''
+    '''processes keywords from pl_data dictionary.'''
     # to begin processing the pl_data, we will need to tokenize (seperating title/description into words)
     # then we will remove the common stopwords, words that will not help in filtering the videos.
 
@@ -44,11 +38,12 @@ def language_processing(pl_data):
         token_title = word_tokenize(video_title)
         token_description = word_tokenize(pl_data[video_title])
 
-        filtered_title = [word for word in token_title if word.casefold() not in stop_words]
-        filtered_description = [word for word in token_description if word.casefold() not in stop_words]
+        filtered_title = ' '.join([word for word in token_title if word.casefold() not in stop_words and word not in string.punctuation])
+        filtered_description = [word for word in token_description if word.casefold() not in stop_words and word not in string.punctuation]
         filtered_pl_data[filtered_title] = filtered_description
     
     return filtered_pl_data
 
-pl_data = {'A brief history of alcohol - Rod Phillips':''.join(video_description)}
+pl_data = {"The myth of Thor's journey to the land of giants - Scott A. Mellor":''.join(description2)}
+
 print(language_processing(pl_data))

@@ -11,34 +11,32 @@ def main():
 
     api_key = "AIzaSyDC3oxqRypaOGAA6AgzeOoYaNzYhhxV00c" # API key for Youtube Data API
 
-    '''
-    #initializing tkinter GUI
-    root = tk.Tk()
-    root.title("YouTube Playlist Organizer")
-
-    tk.Label(root, text="Enter Playlist URL:").pack()
-    url_entry = tk.Entry(root)
-    url_entry.pack()
-
-    submit_button = tk.Button(root, text="Submit", command=lambda: submit_url(url_entry))
-    submit_button.pack()
-
-    
-
-    root.mainloop()
-    '''
     # playlist id is the string after list= in a URL: https://www.youtube.com/playlist?list=PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl
-    playlist_id = "PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl"  #demo playlist TED-ED
+    playlist_id = "PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl"  #demo playlist from TED-ED
 
     try:
         pl_title, pl_data = get_playlist_videos(api_key, playlist_id)
         #print(f'got playlist id: {playlist_id}')
-        print(pl_title, pl_data)
+        #print(pl_title, pl_data)
     except HttpError as e:
         print(f"An HTTP error {e.resp.status} occurred: {e.content}")
 
+    #print(pl_data)
+    #processed_pl_data = language_processing(pl_data)
+    #print(processed_pl_data)
 
-    processed_pl_data = language_processing(pl_data)
+    # retrieve user input for amount of subplaylists, their titles, and keywords relevant to content
+    n_subplaylists = int(input('How many subplaylists would you like to create? > '))
+    subplaylist_info = {} # will contain {subplaylist title: [subplaylist keywords]}
+    for i in range(n_subplaylists):
+        subplaylist_title = input(f'Subplaylist #{i+1} title: ')
+        keywords = input('Enter relevant keywords to your subplaylist content (comma seperated): ').lower().split(',')
+        subplaylist_info[subplaylist_title] = keywords
+
+
+
+
+
 
 
 def submit_url(url_entry):
@@ -50,6 +48,21 @@ def submit_url(url_entry):
     else:
         messagebox.showerror("Error", "Invalid URL or playlist ID not found.")
         
+
+'''
+    #initializing tkinter GUI
+    root = tk.Tk()
+    root.title("YouTube Playlist Organizer")
+
+    tk.Label(root, text="Enter Playlist URL:").pack()
+    url_entry = tk.Entry(root)
+    url_entry.pack()
+
+    submit_button = tk.Button(root, text="Submit", command=lambda: submit_url(url_entry))
+    submit_button.pack()
+
+    root.mainloop()
+    '''
     
 if __name__ == "__main__":
     main()
