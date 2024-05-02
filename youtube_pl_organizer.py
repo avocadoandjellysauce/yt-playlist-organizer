@@ -1,9 +1,10 @@
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import OAuth2WebServerFlow
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 from yt_data import *
-import tkinter as tk
-from tkinter import messagebox
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -18,25 +19,36 @@ nltk.download('punkt')
 lemmatizer = WordNetLemmatizer()
 import string
 
+
+# test code for api call using api key !
+# api_key = "AIzaSyDC3oxqRypaOGAA6AgzeOoYaNzYhhxV00c" # API key for Youtube Data API
+# youtube = build('youtube', 'v3', developerKey=api_key)   #initialize API
+
 def main():
+    # Initializing oAuth2
+    flow = InstalledAppFlow.from_client_secrets_file(
+        "client_secrets.json", scopes = ['https://www.googleapis.com/auth/youtube']
+    )
+    # Runs consent screen for the app to manage YouTube account
+    flow.run_local_server(port=8080, prompt='consent')
+    # Credentials needed to call YouTube Data Api
+    credentials = flow.credentials
 
-    api_key = "AIzaSyDC3oxqRypaOGAA6AgzeOoYaNzYhhxV00c" # API key for Youtube Data API
+    # youtube object will be used to make calls to YouTube Data Api
+    youtube = build('youtube', 'v3', credentials=credentials)
+   
+    # get playlist ID
+    # playlist id is the string after 'list=' in a URL: https://www.youtube.com/playlist?list=PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl
+    playlist_id = "PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl"  # this ID is a demo playlist from TED-ED
 
-    # playlist id is the string after list= in a URL: https://www.youtube.com/playlist?list=PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl
-    playlist_id = "PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl"  #demo playlist from TED-ED
-
+    # extracting info from selected playlist. See yt_data.py
     try:
-        pl_title, pl_data, url_dict, youtube = get_playlist_videos(api_key, playlist_id)
-        #print(f'got playlist id: {playlist_id}')
-        #print(pl_title, pl_data)
+        pl_title, pl_data, url_dict, youtube = get_playlist_videos(youtube, playlist_id)
     except HttpError as e:
         print(f"An HTTP error {e.resp.status} occurred: {e.content}")
 
-    #print(pl_data)
-    #processed_pl_data = language_processing(pl_data)
-    #print(processed_pl_data)
 
-    # retrieve user input for amount of subplaylists, their titles, and keywords relevant to content
+    # ask user for amount of subplaylists, their titles, and keywords relevant to content
     n_subplaylists = int(input('How many subplaylists would you like to create? > '))
     subplaylist_info = {} # will contain {subplaylist title: [subplaylist keywords]}
     for i in range(n_subplaylists):
@@ -50,73 +62,29 @@ def main():
     #print(playlist_assignments)
 
     #Create subplaylists:
-    #subplaylist_ids = create_subplaylists(youtube, subplaylist_info)
+    subplaylist_ids = create_subplaylists(youtube, subplaylist_info)
 
     # add videos to subplaylists:
-    #add_videos_to_subplaylists(youtube, playlist_assignments, url_dict, subplaylist_ids)
+    add_videos_to_subplaylists(youtube, playlist_assignments, url_dict, subplaylist_ids)
 
-def assign_subplaylist(pl_data, subplaylist_info):
-    subplaylist_assignments = {}
+        # list of the subplaylist names
+    subplaylists = [pl for pl in subplaylist_info]
+     
+    # printing results for assigned playlists
+    for sub in subplaylists:
+        vids = []
+        for video in playlist_assignments:
+            if playlist_assignments[video] == sub:
+                print(f'{video} was added to {sub} playlist. ')
+        print()
+    print()
 
-    # for each video in pl_data:
-    for video_title, video_description in pl_data.items(): 
-        # video_title is string, video_description is a list of strings
-        
-        #initialize match_score dict to keep track of how closely the video matches each subplayist
-        match_score = dict.fromkeys(subplaylist_info.keys(), 0)
-
-        # Iterate through each subplaylist
-        for subplaylist_title, keywords in subplaylist_info.items():
-            # iterate through the given keywords of each subplaylist
-            for keyword in keywords:
-                if keyword in video_title.lower(): # if a keyword matches directly in video title, award 10 points
-                    match_score[subplaylist_title] += 10
-                if keyword in ' '.join([word.lower() for word in video_description]): # award 3 points if match in video description 
-                    match_score[subplaylist_title] += 3
-            if match_score[subplaylist_title] >= 20: # if more than 20 points, break and match video to playlist
-                break
-        
-        # find highest match score 
-        highest_score = max(match_score.values())
-        if highest_score > 0:
-            for subplaylist_title, score in match_score.items():
-                if score == highest_score:
-                    subplaylist_assignments[video_title] = subplaylist_title # assign to subplaylist
-                    break
-
-        else: # assign None if all match scores are 0
-            subplaylist_assignments[video_title] = None
-    
-    return subplaylist_assignments
-            
+    print('The following videos were not added to any playlist: ')
+    for video in playlist_assignments:
+        if playlist_assignments[video] == None:
+            print(video)
 
 
-
-def submit_url(url_entry):
-    url = url_entry.get()
-    i = url.find('list=')
-    if i:
-        messagebox.showinfo("Checking URL")
-        return url[i+5:]
-    else:
-        messagebox.showerror("Error", "Invalid URL or playlist ID not found.")
-        
-
-'''
-    #initializing tkinter GUI
-    root = tk.Tk()
-    root.title("YouTube Playlist Organizer")
-
-    tk.Label(root, text="Enter Playlist URL:").pack()
-    url_entry = tk.Entry(root)
-    url_entry.pack()
-
-    submit_button = tk.Button(root, text="Submit", command=lambda: submit_url(url_entry))
-    submit_button.pack()
-
-    root.mainloop()
-    '''
-    
 if __name__ == "__main__":
     main()
 

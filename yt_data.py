@@ -13,12 +13,10 @@ nltk.download('averaged_perceptron_tagger')
 lemmatizer = WordNetLemmatizer()
 import string
 
-def get_playlist_videos(api_key, playlist_id):
+def get_playlist_videos(youtube, playlist_id):
     '''takes in user API key and youtube playlist ID and returns pl_title and a dict {video titles: video descriptions}.
         video titles and descriptions will be tokenized and filtered down into their keywords'''
     
-    youtube = build('youtube', 'v3', developerKey=api_key)   #initialize API
-
     #getting playlist title
     playlist_response = youtube.playlists().list(
         part="snippet",
@@ -85,6 +83,40 @@ def get_playlist_videos(api_key, playlist_id):
 
     return pl_title, pl_data, url_dict, youtube
 
+def assign_subplaylist(pl_data, subplaylist_info):
+    subplaylist_assignments = {}
+
+    # for each video in pl_data:
+    for video_title, video_description in pl_data.items(): 
+        # video_title is string, video_description is a list of strings
+        
+        #initialize match_score dict to keep track of how closely the video matches each subplayist
+        match_score = dict.fromkeys(subplaylist_info.keys(), 0)
+
+        # Iterate through each subplaylist
+        for subplaylist_title, keywords in subplaylist_info.items():
+            # iterate through the given keywords of each subplaylist
+            for keyword in keywords:
+                if keyword in video_title.lower(): # if a keyword matches directly in video title, award 10 points
+                    match_score[subplaylist_title] += 10
+                if keyword in ' '.join([word.lower() for word in video_description]): # award 3 points if match in video description 
+                    match_score[subplaylist_title] += 3
+            if match_score[subplaylist_title] >= 20: # if more than 20 points, break and match video to playlist
+                break
+        
+        # find highest match score 
+        highest_score = max(match_score.values())
+        if highest_score > 0:
+            for subplaylist_title, score in match_score.items():
+                if score == highest_score:
+                    subplaylist_assignments[video_title] = subplaylist_title # assign to subplaylist
+                    break
+
+        else: # assign None if all match scores are 0
+            subplaylist_assignments[video_title] = None
+    
+    return subplaylist_assignments
+            
 def create_subplaylists(youtube, subplaylist_info):
     """
     Creates subplaylists based on the provided subplaylist_info.
@@ -92,13 +124,14 @@ def create_subplaylists(youtube, subplaylist_info):
     """
     subplaylist_ids = {}
     for title, keywords in subplaylist_info.items():
+        keywords_str = ', '.join(keywords)
         # Create a new playlist
         playlist_response = youtube.playlists().insert(
             part="snippet,status",
             body={
                 "snippet": {
                     "title": title,
-                    "description": "Subplaylist created by script",
+                    "description": f"Subplaylist created by script with keywords used: [{keywords_str}]",
                     "tags": keywords
                 },
                 "status": {
