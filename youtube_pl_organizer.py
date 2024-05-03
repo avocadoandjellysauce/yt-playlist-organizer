@@ -5,6 +5,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from yt_data import *
 
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -38,8 +39,10 @@ def main():
     youtube = build('youtube', 'v3', credentials=credentials)
    
     # get playlist ID
+    input_playlist_id = input('Enter playlist URL: ')
     # playlist id is the string after 'list=' in a URL: https://www.youtube.com/playlist?list=PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl
-    playlist_id = "PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl"  # this ID is a demo playlist from TED-ED
+    playlist_id = extract_playlist_id(input_playlist_id)
+    # if empty, will use the example playlist from TED-ED
 
     # extracting info from selected playlist. See yt_data.py
     try:
@@ -49,9 +52,12 @@ def main():
 
 
     # ask user for amount of subplaylists, their titles, and keywords relevant to content
-    n_subplaylists = int(input('How many subplaylists would you like to create? > '))
+    n_subplaylists = input('How many subplaylists would you like to create? > ')
+    while not n_subplaylists.isdigit() or int(n_subplaylists) < 1:
+        print('Enter a valid number. ')
+        n_subplaylists = input('How many subplaylists would you like to create? > ')
     subplaylist_info = {} # will contain {subplaylist title: [subplaylist keywords]}
-    for i in range(n_subplaylists):
+    for i in range(int(n_subplaylists)):
         subplaylist_title = input(f'Subplaylist #{i+1} title: ')
         keywords = input('Enter relevant keywords to your subplaylist content (comma seperated): ').lower().split(',')
         keywords.append(subplaylist_title)
@@ -83,6 +89,7 @@ def main():
     for video in playlist_assignments:
         if playlist_assignments[video] == None:
             print(video)
+
 
 
 if __name__ == "__main__":

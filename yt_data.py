@@ -1,6 +1,8 @@
+import re
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-import re
+from urllib.parse import urlparse, parse_qs
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -13,9 +15,20 @@ nltk.download('averaged_perceptron_tagger')
 lemmatizer = WordNetLemmatizer()
 import string
 
+def extract_playlist_id(url):
+    '''extracts playlist URL from input_playlist. If invalid, will return demo playlist from TED-ED: https://www.youtube.com/watch?v=y5XEwTDlriE&list=PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl'''
+    parsed_url = urlparse(url)
+    query_params = parse_qs(parsed_url.query)
+    playlist_id = query_params.get('list', [''])[0]  # Default to empty string if not found
+    
+    if not playlist_id:
+        playlist_id = "PLJzPmoq-bebri51Ih1E8cOT_23JmQtSBl"  # this ID is a demo playlist from TED-ED
+    
+    return playlist_id
+
 def get_playlist_videos(youtube, playlist_id):
-    '''takes in user API key and youtube playlist ID and returns pl_title and a dict {video titles: video descriptions}.
-        video titles and descriptions will be tokenized and filtered down into their keywords'''
+    '''takes in youtube build and youtube playlist ID and returns pl_title, pl_data {video titles: video descriptions}, url_dict {video title: url}, and   updated youtube build object.
+    video titles and descriptions will be tokenized and filtered down into their keywords'''
     
     #getting playlist title
     playlist_response = youtube.playlists().list(
@@ -60,13 +73,9 @@ def get_playlist_videos(youtube, playlist_id):
 
         # split into words
 
-        #token_title = word_tokenize(video_title)
-
         token_description = word_tokenize(video_description)
 
         # removing stop words and punctuation
-        #filtered_title = ' '.join([word for word in token_title if word.casefold() not in stop_words and word not in string.punctuation]) # turning into string since dict key can't be mutable type
-
         filtered_description = [word for word in token_description if word.casefold() not in stop_words and word not in string.punctuation]
 
         # lemmatize the words,  essentially returning the base/dictionary form of a word aka the 'lemma' (source NLTK). This is done to improve match rates later on
@@ -79,11 +88,11 @@ def get_playlist_videos(youtube, playlist_id):
         # add filtered video_description to pl_data dict
         pl_data[video_title] = filtered_description
 
-        #print(f"Video Title: {video_title}\nDescription: {video_description}\n")
 
     return pl_title, pl_data, url_dict, youtube
 
 def assign_subplaylist(pl_data, subplaylist_info):
+    '''returns subplaylist assignment for each video in pl_data given subplaylist_info'''
     subplaylist_assignments = {}
 
     # for each video in pl_data:
